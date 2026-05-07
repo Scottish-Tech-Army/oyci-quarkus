@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16
+    container_name: oyci_db
+    environment:
+      POSTGRES_DB: oyci
+      POSTGRES_USER: oyci
+      POSTGRES_PASSWORD: oyci
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - oyci_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oyci"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: oyci-backend:latest
+    container_name: oyci_backend
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.jvm
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/oyci
+      DB_USER: oyci
+      DB_PASSWORD: oyci
+      JWT_ISSUER: https://oyci.scottishtecharmy.org
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      MAIL_FROM: noreply@oyci.org
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - oyci_net
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: oyci_mailpit
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+    networks:
+      - oyci_net
+
+  caddy:
+    image: caddy:2
+    container_name: oyci_caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    networks:
+      - oyci_net
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  oyci_net:
+    driver: bridge
+

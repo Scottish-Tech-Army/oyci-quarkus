@@ -1,0 +1,1366 @@
+openapi: 3.0.3
+info:
+  title: Event Booking & Staff Management API
+  description: API for managing events, staff scheduling, participant registration, and communications.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Authentication
+  - name: Tags
+  - name: Locations
+  - name: Event Types
+  - name: Staff Management
+  - name: Staff Self-Service
+  - name: Event Instances
+  - name: Staffing & Publishing
+  - name: Participant Portal
+  - name: Communications
+
+paths:
+  # ── Authentication ──
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate a user and return a JWT
+      description: Authenticates a user and returns a JWT.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new participant
+      description: Registers a new participant.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration successful
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ── Tags (Admin & Configuration) ──
+  /tags:
+    get:
+      tags: [Tags]
+      summary: List all tags
+      responses:
+        '200':
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      tags: [Tags]
+      summary: Create a new tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+      responses:
+        '201':
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /tags/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [Tags]
+      summary: Update a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+      responses:
+        '200':
+          description: Tag updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '404':
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Tags]
+      summary: Delete a tag
+      responses:
+        '204':
+          description: Tag deleted
+        '404':
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Locations (Admin & Configuration) ──
+  /locations:
+    get:
+      tags: [Locations]
+      summary: List all locations
+      responses:
+        '200':
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      tags: [Locations]
+      summary: Create a new location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRequest'
+      responses:
+        '201':
+          description: Location created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /locations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [Locations]
+      summary: Update a location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRequest'
+      responses:
+        '200':
+          description: Location updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '404':
+          description: Location not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Locations]
+      summary: Delete a location
+      responses:
+        '204':
+          description: Location deleted
+        '404':
+          description: Location not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Event Types (Admin & Configuration) ──
+  /event-types:
+    get:
+      tags: [Event Types]
+      summary: List all event types
+      responses:
+        '200':
+          description: List of event types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      tags: [Event Types]
+      summary: Create a new event type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeRequest'
+      responses:
+        '201':
+          description: Event type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /event-types/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [Event Types]
+      summary: Update an event type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeRequest'
+      responses:
+        '200':
+          description: Event type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '404':
+          description: Event type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Event Types]
+      summary: Delete an event type
+      responses:
+        '204':
+          description: Event type deleted
+        '404':
+          description: Event type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Staff Management ──
+  /staff:
+    get:
+      tags: [Staff Management]
+      summary: List all staff members (Admin only)
+      responses:
+        '200':
+          description: List of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Staff'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      tags: [Staff Management]
+      summary: Create a new staff account (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreateRequest'
+      responses:
+        '201':
+          description: Staff created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /staff/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Staff Management]
+      summary: Get staff details
+      responses:
+        '200':
+          description: Staff details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '404':
+          description: Staff not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    put:
+      tags: [Staff Management]
+      summary: Update staff details (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffUpdateRequest'
+      responses:
+        '200':
+          description: Staff updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '404':
+          description: Staff not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Staff Management]
+      summary: Delete a staff member (Admin only)
+      responses:
+        '204':
+          description: Staff deleted
+        '404':
+          description: Staff not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Staff Self-Service ──
+  /staff/{id}/availability:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [Staff Self-Service]
+      summary: Update staff weekly availability windows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRequest'
+      responses:
+        '200':
+          description: Availability updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityRequest'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /staff/{id}/max-hours:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [Staff Self-Service]
+      summary: Update staff maximum working hours per week
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaxHoursRequest'
+      responses:
+        '200':
+          description: Max hours updated
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /staff/{id}/tags:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [Staff Self-Service]
+      summary: Update staff qualifications/tags
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffTagsRequest'
+      responses:
+        '200':
+          description: Tags updated
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /staff/{id}/schedule:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Staff Self-Service]
+      summary: Get upcoming assigned events for the staff member
+      responses:
+        '200':
+          description: Staff schedule
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventInstance'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /staff/{id}/holidays:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Staff Self-Service]
+      summary: List staff holiday dates
+      responses:
+        '200':
+          description: List of holidays
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Holiday'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      tags: [Staff Self-Service]
+      summary: Add a staff holiday date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayRequest'
+      responses:
+        '201':
+          description: Holiday added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Staff Self-Service]
+      summary: Remove a staff holiday date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayRequest'
+      responses:
+        '204':
+          description: Holiday removed
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Event Instances ──
+  /event-instances:
+    get:
+      tags: [Event Instances]
+      summary: List event instances (supports from, to, status filters)
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/EventStatus'
+      responses:
+        '200':
+          description: List of event instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventInstance'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      tags: [Event Instances]
+      summary: "Create a new event instance (Status: DRAFT)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInstanceRequest'
+      responses:
+        '201':
+          description: Event instance created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInstance'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /event-instances/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Event Instances]
+      summary: Get instance details
+      responses:
+        '200':
+          description: Event instance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInstance'
+        '404':
+          description: Event instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    put:
+      tags: [Event Instances]
+      summary: Update instance details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInstanceRequest'
+      responses:
+        '200':
+          description: Event instance updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInstance'
+        '404':
+          description: Event instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Event Instances]
+      summary: Delete an instance
+      responses:
+        '204':
+          description: Event instance deleted
+        '404':
+          description: Event instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Staffing & Publishing ──
+  /event-instances/{id}/available-staff:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [Staffing & Publishing]
+      summary: Triggers the Assignment Engine to return staff with availability/qualification warnings
+      responses:
+        '200':
+          description: Available staff with warnings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableStaff'
+        '404':
+          description: Event instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /event-instances/{id}/assign:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [Staffing & Publishing]
+      summary: Assign a staff member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRequest'
+      responses:
+        '200':
+          description: Staff assigned
+        '404':
+          description: Event instance or staff not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /event-instances/{id}/assign/{staffId}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+      - name: staffId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    delete:
+      tags: [Staffing & Publishing]
+      summary: Unassign a staff member
+      responses:
+        '204':
+          description: Staff unassigned
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /event-instances/{id}/publish:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [Staffing & Publishing]
+      summary: Transition a DRAFT event to PUBLISHED (requires minimum staff)
+      responses:
+        '200':
+          description: Event published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInstance'
+        '400':
+          description: Minimum staff not met
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Participant Portal ──
+  /participant/events:
+    get:
+      tags: [Participant Portal]
+      summary: List published events for registration
+      responses:
+        '200':
+          description: List of published events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventInstance'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /participant/events/{id}/register:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [Participant Portal]
+      summary: Register for an event
+      responses:
+        '200':
+          description: Registration successful
+        '400':
+          description: Event full or registration closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Participant Portal]
+      summary: Cancel registration
+      responses:
+        '204':
+          description: Registration cancelled
+        '404':
+          description: Registration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ── Communications ──
+  /communications/notify-staff:
+    post:
+      tags: [Communications]
+      summary: Send weekly schedule emails to all assigned staff for a given date range
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotifyStaffRequest'
+      responses:
+        '200':
+          description: Notifications sent
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  schemas:
+    # ── Common ──
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+
+    UserRole:
+      type: string
+      enum: [ADMIN, STAFF, PARTICIPANT]
+
+    # ── Auth ──
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password, dateOfBirth]
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 200
+        password:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+          example: "2026-03-30"
+
+    # ── Tags ──
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 100
+
+    TagRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+
+    # ── Locations ──
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 200
+        addressLine1:
+          type: string
+          maxLength: 255
+        addressLine2:
+          type: string
+          maxLength: 255
+        city:
+          type: string
+          maxLength: 100
+        zipCode:
+          type: string
+          maxLength: 20
+        contactName:
+          type: string
+          maxLength: 150
+        contactPhone:
+          type: string
+          maxLength: 50
+        contactEmail:
+          type: string
+          format: email
+          maxLength: 150
+        defaultCapacity:
+          type: integer
+          description: Default capacity for the location
+
+    LocationRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        addressLine1:
+          type: string
+          maxLength: 255
+        addressLine2:
+          type: string
+          maxLength: 255
+        city:
+          type: string
+          maxLength: 100
+        zipCode:
+          type: string
+          maxLength: 20
+        contactName:
+          type: string
+          maxLength: 150
+        contactPhone:
+          type: string
+          maxLength: 50
+        contactEmail:
+          type: string
+          format: email
+          maxLength: 150
+        defaultCapacity:
+          type: integer
+
+    # ── Event Types ──
+    EventType:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          description: Duration in minutes (maps to event_types.duration_minutes)
+        requiredTags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        minStaff:
+          type: integer
+          description: Minimum staff required to publish
+
+    EventTypeRequest:
+      type: object
+      required: [name, durationMinutes]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+        requiredTagIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        minStaff:
+          type: integer
+
+    # ── Staff ──
+    Staff:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 200
+        maxHoursPerWeek:
+          type: integer
+          description: Maximum working hours per week (maps to users.max_hours_per_week)
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityWindow'
+
+    StaffCreateRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 200
+        password:
+          type: string
+        maxHoursPerWeek:
+          type: integer
+          default: 40
+
+    StaffUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 200
+
+    AvailabilityWindow:
+      type: object
+      properties:
+        dayOfWeek:
+          type: string
+          enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+        startTime:
+          type: string
+          format: time
+          example: "09:00"
+        endTime:
+          type: string
+          format: time
+          example: "17:00"
+
+    AvailabilityRequest:
+      type: object
+      required: [windows]
+      properties:
+        windows:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityWindow'
+
+    MaxHoursRequest:
+      type: object
+      required: [maxHoursPerWeek]
+      properties:
+        maxHoursPerWeek:
+          type: integer
+          default: 40
+
+    StaffTagsRequest:
+      type: object
+      required: [tagIds]
+      properties:
+        tagIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    Holiday:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        date:
+          type: string
+          format: date
+
+    HolidayRequest:
+      type: object
+      required: [date]
+      properties:
+        date:
+          type: string
+          format: date
+
+    # ── Event Instances ──
+    EventStatus:
+      type: string
+      description: >
+        Expanded to match the relational model (event_instances.status) while keeping API needs.
+      enum: [DRAFT, PUBLISHED, STAFFED, COMPLETED, CANCELLED]
+
+    EventInstance:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        eventTypeId:
+          type: integer
+          format: int64
+        eventTypeName:
+          type: string
+        locationId:
+          type: integer
+          format: int64
+        locationName:
+          type: string
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        status:
+          $ref: '#/components/schemas/EventStatus'
+        assignedStaff:
+          type: array
+          items:
+            $ref: '#/components/schemas/Staff'
+        maxParticipants:
+          type: integer
+          description: Capacity override for this instance (maps to event_instances.capacity_override)
+        registeredParticipants:
+          type: integer
+          description: Count of registered participants (derived from registrations table in implementation)
+
+    EventInstanceRequest:
+      type: object
+      required: [eventTypeId, locationId, date, startTime, endTime]
+      properties:
+        eventTypeId:
+          type: integer
+          format: int64
+        locationId:
+          type: integer
+          format: int64
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        maxParticipants:
+          type: integer
+          description: Optional override of location default capacity
+
+    # ── Staffing ──
+    AvailableStaff:
+      type: object
+      properties:
+        staff:
+          $ref: '#/components/schemas/Staff'
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Availability or qualification warnings
+
+    AssignRequest:
+      type: object
+      required: [staffId]
+      properties:
+        staffId:
+          type: integer
+          format: int64
+
+    # ── Communications ──
+    NotifyStaffRequest:
+      type: object
+      required: [from, to]
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date

@@ -1,0 +1,19 @@
+meta {
+  name: GET /schedule-periods
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/schedule-periods
+  auth: none
+}
+
+body:none {
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

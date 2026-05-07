@@ -1,0 +1,19 @@
+meta {
+  name: GET /event-types
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/event-types
+  auth: none
+}
+
+body:none {
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

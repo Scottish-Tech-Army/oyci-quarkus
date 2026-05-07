@@ -1,0 +1,19 @@
+meta {
+  name: GET /hello
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/hello
+  auth: none
+}
+
+body:none {
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

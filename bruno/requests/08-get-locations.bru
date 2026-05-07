@@ -1,0 +1,19 @@
+meta {
+  name: GET /locations
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/locations
+  auth: none
+}
+
+body:none {
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

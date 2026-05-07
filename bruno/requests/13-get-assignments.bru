@@ -1,0 +1,19 @@
+meta {
+  name: GET /assignments
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/assignments
+  auth: none
+}
+
+body:none {
+}
+
+tests {
+  test("status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

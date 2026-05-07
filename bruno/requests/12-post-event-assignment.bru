@@ -1,0 +1,28 @@
+meta {
+  name: POST /events/{eventId}/assignments
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/events/{{eventId}}/assignments
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "staffId": "staff-2",
+    "role": "Support",
+    "assignedBy": "bruno-local"
+  }
+}
+
+tests {
+  test("status is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

@@ -1,0 +1,17 @@
+environment:
+  name: Staging
+  identifier: staging
+  orgIdentifier: scottishtecharmy
+  projectIdentifier: oyci-quarkus
+  description: "Staging environment for OYCI Quarkus API"
+  type: PreProduction
+  tags:
+    env: staging
+  variables:
+    - name: namespace
+      type: String
+      value: oyci-staging
+    - name: valuesFile
+      type: String
+      value: helm/oyci-quarkus/values-staging.yaml
+

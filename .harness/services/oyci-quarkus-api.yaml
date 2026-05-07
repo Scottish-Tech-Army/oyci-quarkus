@@ -1,0 +1,37 @@
+service:
+  name: OYCI Quarkus API
+  identifier: oyci-quarkus
+  orgIdentifier: scottishtecharmy
+  projectIdentifier: oyci-quarkus
+  description: "Scottish Tech Army OYCI Quarkus REST API"
+  tags:
+    app: oyci-quarkus
+  serviceDefinition:
+    type: Kubernetes
+    spec:
+      manifests:
+        - manifest:
+            identifier: oyci_helm_chart
+            type: HelmChart
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: <+input>
+                  repoName: sta-tfg-oyci-quarkus
+                  branch: main
+                  folderPath: helm/oyci-quarkus
+              chartVersion: <+input>
+              helmVersion: V3
+              skipResourceVersioning: false
+      artifacts:
+        primary:
+          primaryArtifactRef: oyci-quarkus_image
+          sources:
+            - identifier: oyci-quarkus_image
+              type: DockerRegistry
+              spec:
+                connectorRef: <+input>
+                imagePath: <+input>
+                tag: <+input>
+

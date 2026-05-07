@@ -1,0 +1,20 @@
+inputSet:
+  name: Production Input Set
+  identifier: prod_inputset
+  orgIdentifier: scottishtecharmy
+  projectIdentifier: oyci-quarkus
+  pipelineIdentifier: cd_deploy
+  description: "Pre-filled inputs for Production environment deployment"
+  tags:
+    env: production
+  pipeline:
+    variables:
+      - name: DOCKER_REGISTRY
+        type: String
+        value: ghcr.io/scottishtecharmy
+      - name: IMAGE_NAME
+        type: String
+        value: oyci-quarkus
+      - name: IMAGE_TAG
+        type: String
+        value: <+input>

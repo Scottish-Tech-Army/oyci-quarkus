@@ -1,0 +1,21 @@
+inputSet:
+  name: Dev Input Set
+  identifier: dev_inputset
+  orgIdentifier: scottishtecharmy
+  projectIdentifier: oyci-quarkus
+  pipelineIdentifier: cd_deploy
+  description: "Pre-filled inputs for Dev environment deployment"
+  tags:
+    env: dev
+  pipeline:
+    variables:
+      - name: DOCKER_REGISTRY
+        type: String
+        value: ghcr.io/scottishtecharmy
+      - name: IMAGE_NAME
+        type: String
+        value: oyci-quarkus
+      - name: IMAGE_TAG
+        type: String
+        value: <+input>
+

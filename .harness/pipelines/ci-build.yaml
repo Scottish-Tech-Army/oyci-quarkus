@@ -1,0 +1,142 @@
+pipeline:
+  name: CI - Build and Push
+  identifier: ci_build_and_push
+  projectIdentifier: oyci-quarkus
+  orgIdentifier: scottishtecharmy
+  description: "Builds the OYCI Quarkus API, runs tests, and pushes a Docker image."
+  tags:
+    app: oyci-quarkus
+    team: scottishtecharmy
+
+  properties:
+    ci:
+      codebase:
+        connectorRef: <+input>
+        repoName: sta-tfg-oyci-quarkus
+        build: <+input>
+
+  variables:
+    - name: DOCKER_REGISTRY
+      type: String
+      description: "Container registry URL (e.g. ghcr.io/scottishtecharmy)"
+      required: true
+      value: <+input>
+    - name: IMAGE_NAME
+      type: String
+      description: "Docker image name"
+      value: oyci-quarkus
+
+  stages:
+    # =========================================
+    # Stage 1: Build, Test & Push Docker Image
+    # =========================================
+    - stage:
+        name: Build and Test
+        identifier: build_and_test
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              # ---- Maven Build ----
+              - step:
+                  type: Run
+                  name: Maven Build
+                  identifier: maven_build
+                  spec:
+                    connectorRef: <+input>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: |
+                      ./mvnw package -DskipTests -B -ntp
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths: []
+
+              # ---- Maven Test ----
+              - step:
+                  type: Run
+                  name: Maven Test
+                  identifier: maven_test
+                  spec:
+                    connectorRef: <+input>
+                    image: maven:3.9-eclipse-temurin-17
+                    shell: Sh
+                    command: |
+                      ./mvnw test -B -ntp
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - "target/surefire-reports/*.xml"
+
+              # ---- Build & Push Docker Image ----
+              - step:
+                  type: BuildAndPushDockerRegistry
+                  name: Build and Push Image
+                  identifier: build_and_push_image
+                  spec:
+                    connectorRef: <+input>
+                    repo: <+pipeline.variables.DOCKER_REGISTRY>/<+pipeline.variables.IMAGE_NAME>
+                    tags:
+                      - <+pipeline.sequenceId>
+                      - latest
+                      - <+codebase.commitSha>
+                    dockerfile: src/main/docker/Dockerfile.jvm
+                    context: .
+                    optimize: true
+
+  # =========================================
+  # Triggers
+  # =========================================
+  triggers:
+    - trigger:
+        name: On Push to Main
+        identifier: on_push_main
+        enabled: true
+        description: "Trigger CI on push to main branch"
+        type: Webhook
+        spec:
+          type: Github
+          spec:
+            type: Push
+            spec:
+              connectorRef: <+input>
+              autoAbortPreviousExecutions: true
+              payloadConditions:
+                - key: targetBranch
+                  operator: Equals
+                  value: main
+              headerConditions: []
+              actions: []
+
+    - trigger:
+        name: On Pull Request
+        identifier: on_pull_request
+        enabled: true
+        description: "Trigger CI on pull requests to main"
+        type: Webhook
+        spec:
+          type: Github
+          spec:
+            type: PullRequest
+            spec:
+              connectorRef: <+input>
+              autoAbortPreviousExecutions: true
+              payloadConditions:
+                - key: targetBranch
+                  operator: Equals
+                  value: main
+              headerConditions: []
+              actions:
+                - opened
+                - synchronize
+                - reopened
+

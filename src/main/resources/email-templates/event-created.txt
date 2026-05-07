@@ -1,0 +1,8 @@
+Hello {userName},
+
+A new event "{eventName}" is scheduled for {eventDate} at {eventLocation}.
+
+If you are interested, please register to participate.
+
+Thank you,
+OYCI Team

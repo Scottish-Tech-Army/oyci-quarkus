@@ -1,0 +1,53 @@
+# =============================================
+# OYCI Quarkus API — Dev Environment Overrides
+# =============================================
+
+replicaCount: 1
+
+image:
+  pullPolicy: Always
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: oyci-api.dev.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+app:
+  logLevel: DEBUG
+  corsOrigins: "*"
+  swaggerEnabled: true
+
+datasource:
+  dbKind: postgresql
+  jdbcUrl: "jdbc:postgresql://oyci-db-dev-postgresql:5432/oyci_dev"
+  poolMaxSize: 5
+  poolMinSize: 1
+  schemaStrategy: "update"
+
+dbCredentials:
+  username: oyci_dev_user
+  password: dev-changeme
+
+mail:
+  enabled: false
+

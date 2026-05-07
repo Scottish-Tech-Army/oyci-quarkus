@@ -1,0 +1,6 @@
+Hello {staffName},
+
+Your leave request has been {status}.
+
+Thank you,
+OYCI Team

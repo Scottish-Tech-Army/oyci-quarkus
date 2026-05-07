@@ -1,0 +1,348 @@
+pipeline:
+  name: CD - Deploy to Environments
+  identifier: cd_deploy
+  projectIdentifier: oyci-quarkus
+  orgIdentifier: scottishtecharmy
+  description: "Deploys the OYCI Quarkus API to Dev, Staging, and Production via Helm."
+  tags:
+    app: oyci-quarkus
+    team: scottishtecharmy
+
+  variables:
+    - name: DOCKER_REGISTRY
+      type: String
+      description: "Container registry URL"
+      required: true
+      value: <+input>
+    - name: IMAGE_NAME
+      type: String
+      description: "Docker image name"
+      value: oyci-quarkus
+    - name: IMAGE_TAG
+      type: String
+      description: "Docker image tag to deploy"
+      required: true
+      value: <+input>
+    - name: HELM_CHART_PATH
+      type: String
+      description: "Path to the Helm chart"
+      value: helm/oyci-quarkus
+
+  stages:
+    # =========================================
+    # Stage 1: Deploy to Dev (auto-approval)
+    # =========================================
+    - stage:
+        name: Deploy to Dev
+        identifier: deploy_dev
+        type: Deployment
+        description: "Deploy to the Dev environment"
+        spec:
+          deploymentType: Kubernetes
+          service:
+            serviceRef: oyci-quarkus
+            serviceInputs:
+              serviceDefinition:
+                type: Kubernetes
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: oyci-quarkus_image
+                      sources:
+                        - identifier: oyci-quarkus_image
+                          type: DockerRegistry
+                          spec:
+                            tag: <+pipeline.variables.IMAGE_TAG>
+          environment:
+            environmentRef: dev
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: dev_k8s
+          execution:
+            steps:
+              - step:
+                  type: HelmDeploy
+                  name: Helm Deploy to Dev
+                  identifier: helm_deploy_dev
+                  spec:
+                    connectorRef: <+input>
+                    namespace: oyci-dev
+                    releaseName: oyci-quarkus-dev
+                    chartPath: <+pipeline.variables.HELM_CHART_PATH>
+                    valuesPaths:
+                      - helm/oyci-quarkus/values.yaml
+                      - helm/oyci-quarkus/values-dev.yaml
+                    commandFlags:
+                      - commandType: Install
+                        flag: "--set image.repository=<+pipeline.variables.DOCKER_REGISTRY>/<+pipeline.variables.IMAGE_NAME> --set image.tag=<+pipeline.variables.IMAGE_TAG>"
+                  timeout: 10m
+
+              - step:
+                  type: HelmRollback
+                  name: Helm Rollback Dev
+                  identifier: helm_rollback_dev
+                  spec: {}
+                  when:
+                    stageStatus: Failure
+                  timeout: 5m
+
+              # ---- Smoke Test ----
+              - step:
+                  type: Run
+                  name: Smoke Test Dev
+                  identifier: smoke_test_dev
+                  spec:
+                    connectorRef: <+input>
+                    image: curlimages/curl:latest
+                    shell: Sh
+                    command: |
+                      echo "Running smoke tests against Dev..."
+                      curl -f http://oyci-quarkus-dev.oyci-dev.svc.cluster.local:8080/q/health/ready || exit 1
+                      echo "Smoke test passed!"
+                  timeout: 2m
+
+            rollbackSteps:
+              - step:
+                  type: HelmRollback
+                  name: Helm Rollback Dev
+                  identifier: helm_rollback_dev_rb
+                  spec: {}
+                  timeout: 5m
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+
+    # =========================================
+    # Stage 2: Deploy to Staging (manual gate)
+    # =========================================
+    - stage:
+        name: Approval - Staging
+        identifier: approval_staging
+        type: Approval
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: HarnessApproval
+                  name: Approve Staging Deployment
+                  identifier: approve_staging
+                  spec:
+                    approvalMessage: "Please review and approve the deployment to Staging environment."
+                    includePipelineExecutionHistory: true
+                    approvers:
+                      userGroups:
+                        - <+input>
+                      minimumCount: 1
+                      disallowPipelineExecutor: false
+                    approverInputs: []
+                  timeout: 1d
+
+    - stage:
+        name: Deploy to Staging
+        identifier: deploy_staging
+        type: Deployment
+        description: "Deploy to the Staging environment"
+        spec:
+          deploymentType: Kubernetes
+          service:
+            serviceRef: oyci-quarkus
+            serviceInputs:
+              serviceDefinition:
+                type: Kubernetes
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: oyci-quarkus_image
+                      sources:
+                        - identifier: oyci-quarkus_image
+                          type: DockerRegistry
+                          spec:
+                            tag: <+pipeline.variables.IMAGE_TAG>
+          environment:
+            environmentRef: staging
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: staging_k8s
+          execution:
+            steps:
+              - step:
+                  type: HelmDeploy
+                  name: Helm Deploy to Staging
+                  identifier: helm_deploy_staging
+                  spec:
+                    connectorRef: <+input>
+                    namespace: oyci-staging
+                    releaseName: oyci-quarkus-staging
+                    chartPath: <+pipeline.variables.HELM_CHART_PATH>
+                    valuesPaths:
+                      - helm/oyci-quarkus/values.yaml
+                      - helm/oyci-quarkus/values-staging.yaml
+                    commandFlags:
+                      - commandType: Install
+                        flag: "--set image.repository=<+pipeline.variables.DOCKER_REGISTRY>/<+pipeline.variables.IMAGE_NAME> --set image.tag=<+pipeline.variables.IMAGE_TAG>"
+                  timeout: 10m
+
+              - step:
+                  type: Run
+                  name: Smoke Test Staging
+                  identifier: smoke_test_staging
+                  spec:
+                    connectorRef: <+input>
+                    image: curlimages/curl:latest
+                    shell: Sh
+                    command: |
+                      echo "Running smoke tests against Staging..."
+                      curl -f http://oyci-quarkus-staging.oyci-staging.svc.cluster.local:8080/q/health/ready || exit 1
+                      echo "Smoke test passed!"
+                  timeout: 2m
+
+            rollbackSteps:
+              - step:
+                  type: HelmRollback
+                  name: Helm Rollback Staging
+                  identifier: helm_rollback_staging_rb
+                  spec: {}
+                  timeout: 5m
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+
+    # =========================================
+    # Stage 3: Deploy to Production (manual gate)
+    # =========================================
+    - stage:
+        name: Approval - Production
+        identifier: approval_production
+        type: Approval
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: HarnessApproval
+                  name: Approve Production Deployment
+                  identifier: approve_production
+                  spec:
+                    approvalMessage: "Please review and approve the deployment to PRODUCTION environment. This will affect live users."
+                    includePipelineExecutionHistory: true
+                    approvers:
+                      userGroups:
+                        - <+input>
+                      minimumCount: 2
+                      disallowPipelineExecutor: true
+                    approverInputs: []
+                  timeout: 1d
+
+    - stage:
+        name: Deploy to Production
+        identifier: deploy_production
+        type: Deployment
+        description: "Deploy to the Production environment with canary strategy"
+        spec:
+          deploymentType: Kubernetes
+          service:
+            serviceRef: oyci-quarkus
+            serviceInputs:
+              serviceDefinition:
+                type: Kubernetes
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: oyci-quarkus_image
+                      sources:
+                        - identifier: oyci-quarkus_image
+                          type: DockerRegistry
+                          spec:
+                            tag: <+pipeline.variables.IMAGE_TAG>
+          environment:
+            environmentRef: production
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: prod_k8s
+          execution:
+            steps:
+              # ---- Canary: 25% traffic ----
+              - step:
+                  type: HelmDeploy
+                  name: Canary Deploy (25%)
+                  identifier: helm_deploy_prod_canary
+                  spec:
+                    connectorRef: <+input>
+                    namespace: oyci-prod
+                    releaseName: oyci-quarkus-prod-canary
+                    chartPath: <+pipeline.variables.HELM_CHART_PATH>
+                    valuesPaths:
+                      - helm/oyci-quarkus/values.yaml
+                      - helm/oyci-quarkus/values-prod.yaml
+                    commandFlags:
+                      - commandType: Install
+                        flag: "--set image.repository=<+pipeline.variables.DOCKER_REGISTRY>/<+pipeline.variables.IMAGE_NAME> --set image.tag=<+pipeline.variables.IMAGE_TAG> --set replicaCount=1"
+                  timeout: 10m
+
+              - step:
+                  type: Run
+                  name: Verify Canary
+                  identifier: verify_canary
+                  spec:
+                    connectorRef: <+input>
+                    image: curlimages/curl:latest
+                    shell: Sh
+                    command: |
+                      echo "Verifying canary deployment..."
+                      for i in $(seq 1 10); do
+                        curl -f http://oyci-quarkus-prod-canary.oyci-prod.svc.cluster.local:8080/q/health/ready || exit 1
+                        sleep 5
+                      done
+                      echo "Canary verification passed!"
+                  timeout: 5m
+
+              # ---- Full rollout ----
+              - step:
+                  type: HelmDeploy
+                  name: Full Production Deploy
+                  identifier: helm_deploy_prod_full
+                  spec:
+                    connectorRef: <+input>
+                    namespace: oyci-prod
+                    releaseName: oyci-quarkus-prod
+                    chartPath: <+pipeline.variables.HELM_CHART_PATH>
+                    valuesPaths:
+                      - helm/oyci-quarkus/values.yaml
+                      - helm/oyci-quarkus/values-prod.yaml
+                    commandFlags:
+                      - commandType: Install
+                        flag: "--set image.repository=<+pipeline.variables.DOCKER_REGISTRY>/<+pipeline.variables.IMAGE_NAME> --set image.tag=<+pipeline.variables.IMAGE_TAG>"
+                  timeout: 15m
+
+              # ---- Cleanup canary ----
+              - step:
+                  type: Run
+                  name: Cleanup Canary
+                  identifier: cleanup_canary
+                  spec:
+                    connectorRef: <+input>
+                    image: alpine/helm:latest
+                    shell: Sh
+                    command: |
+                      helm uninstall oyci-quarkus-prod-canary -n oyci-prod || true
+                  timeout: 5m
+
+            rollbackSteps:
+              - step:
+                  type: HelmRollback
+                  name: Helm Rollback Production
+                  identifier: helm_rollback_prod_rb
+                  spec: {}
+                  timeout: 10m
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+

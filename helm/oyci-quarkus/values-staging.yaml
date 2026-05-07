@@ -1,0 +1,72 @@
+# =============================================
+# OYCI Quarkus API — Staging Environment Overrides
+# =============================================
+
+replicaCount: 2
+
+image:
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+  hosts:
+    - host: oyci-api.staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: oyci-api-staging-tls
+      hosts:
+        - oyci-api.staging.example.com
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 384Mi
+  limits:
+    cpu: "1"
+    memory: 768Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+app:
+  logLevel: INFO
+  corsOrigins: "https://oyci.staging.example.com"
+  swaggerEnabled: true
+
+datasource:
+  dbKind: postgresql
+  jdbcUrl: "jdbc:postgresql://oyci-db-staging-postgresql:5432/oyci_staging"
+  poolMaxSize: 10
+  poolMinSize: 2
+  schemaStrategy: "validate"
+
+dbCredentials:
+  username: oyci_staging_user
+  password: staging-changeme
+
+mail:
+  enabled: true
+  from: "OYCISupport <noreply@staging.example.com>"
+  host: smtp.staging.example.com
+  port: 587
+  ssl: false
+  startTls: true
+  authMethods: "LOGIN,PLAIN"
+
+mailCredentials:
+  username: staging-smtp-user
+  password: staging-smtp-changeme
+

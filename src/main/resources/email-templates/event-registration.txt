@@ -1,0 +1,8 @@
+Hello {userName},
+
+You have successfully registered for the event: {eventName}.
+Event Date: {eventDate}
+Location: {eventLocation}
+
+Thank you,
+OYCI Team

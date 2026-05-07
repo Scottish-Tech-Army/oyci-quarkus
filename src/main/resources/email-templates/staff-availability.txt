@@ -1,0 +1,6 @@
+Hello {staffName},
+
+Your availability status has been updated to: {availabilityStatus}.
+
+Thank you,
+OYCI Team

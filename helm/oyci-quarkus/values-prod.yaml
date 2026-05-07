@@ -1,0 +1,74 @@
+# =============================================
+# OYCI Quarkus API — Production Environment Overrides
+# =============================================
+
+replicaCount: 3
+
+image:
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  hosts:
+    - host: oyci-api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: oyci-api-prod-tls
+      hosts:
+        - oyci-api.example.com
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 75
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+app:
+  logLevel: WARN
+  corsOrigins: "https://oyci.example.com"
+  swaggerEnabled: false
+
+datasource:
+  dbKind: postgresql
+  jdbcUrl: "jdbc:postgresql://oyci-db-prod-postgresql:5432/oyci_prod"
+  poolMaxSize: 20
+  poolMinSize: 5
+  schemaStrategy: "none"
+
+dbCredentials:
+  username: oyci_prod_user
+  password: prod-changeme
+
+mail:
+  enabled: true
+  from: "OYCISupport <noreply@example.com>"
+  host: smtp.example.com
+  port: 587
+  ssl: false
+  startTls: true
+  authMethods: "LOGIN,PLAIN"
+
+mailCredentials:
+  username: prod-smtp-user
+  password: prod-smtp-changeme
+

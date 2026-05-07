@@ -1,0 +1,3 @@
+# Patterns to always ignore in this chart
+*.tgz
+

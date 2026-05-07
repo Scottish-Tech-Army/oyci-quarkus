@@ -1,0 +1,17 @@
+environment:
+  name: Dev
+  identifier: dev
+  orgIdentifier: scottishtecharmy
+  projectIdentifier: oyci-quarkus
+  description: "Development environment for OYCI Quarkus API"
+  type: PreProduction
+  tags:
+    env: dev
+  variables:
+    - name: namespace
+      type: String
+      value: oyci-dev
+    - name: valuesFile
+      type: String
+      value: helm/oyci-quarkus/values-dev.yaml
+

@@ -1,0 +1,21 @@
+inputSet:
+  name: Staging Input Set
+  identifier: staging_inputset
+  orgIdentifier: scottishtecharmy
+  projectIdentifier: oyci-quarkus
+  pipelineIdentifier: cd_deploy
+  description: "Pre-filled inputs for Staging environment deployment"
+  tags:
+    env: staging
+  pipeline:
+    variables:
+      - name: DOCKER_REGISTRY
+        type: String
+        value: ghcr.io/scottishtecharmy
+      - name: IMAGE_NAME
+        type: String
+        value: oyci-quarkus
+      - name: IMAGE_TAG
+        type: String
+        value: <+input>
+

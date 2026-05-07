@@ -1,0 +1,182 @@
+# =============================================
+# OYCI Quarkus API — Default Helm Values
+# =============================================
+
+# -- Number of replicas
+replicaCount: 1
+
+# -- Container image configuration
+image:
+  repository: ghcr.io/scottishtecharmy/oyci-quarkus
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (default is the chart appVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the release name
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Service account configuration
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Pod labels
+podLabels: {}
+
+# -- Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 185
+  fsGroup: 185
+
+# -- Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: oyci-api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: oyci-api-tls
+  #    hosts:
+  #      - oyci-api.example.com
+
+# -- Resource requests and limits
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+# -- Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+# -- Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# -- Liveness probe
+livenessProbe:
+  httpGet:
+    path: /q/health/live
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# -- Readiness probe
+readinessProbe:
+  httpGet:
+    path: /q/health/ready
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# -- Startup probe (useful for slow-starting JVM apps)
+startupProbe:
+  httpGet:
+    path: /q/health/started
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 30
+
+# -- Node selector
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}
+
+# =============================================
+# Application Configuration
+# =============================================
+
+# -- Quarkus application configuration
+app:
+  # -- Quarkus log level
+  logLevel: INFO
+  # -- CORS allowed origins (comma-separated)
+  corsOrigins: "*"
+  # -- OpenAPI / Swagger
+  swaggerEnabled: true
+
+# -- Datasource configuration
+datasource:
+  # -- Database kind (postgresql for production)
+  dbKind: postgresql
+  # -- JDBC URL
+  jdbcUrl: "jdbc:postgresql://oyci-db-postgresql:5432/oyci"
+  # -- Connection pool max size
+  poolMaxSize: 10
+  # -- Connection pool min size
+  poolMinSize: 2
+  # -- Hibernate schema strategy (none, update, validate, drop-and-create)
+  schemaStrategy: "none"
+
+# -- Database credentials (stored in Kubernetes Secret)
+dbCredentials:
+  username: oyci_user
+  password: changeme
+
+# -- SMTP / Mail configuration
+mail:
+  enabled: false
+  from: "OYCISupport <noreply@example.com>"
+  host: smtp.example.com
+  port: 587
+  ssl: false
+  startTls: true
+  authMethods: "LOGIN,PLAIN"
+
+# -- SMTP credentials (stored in Kubernetes Secret)
+mailCredentials:
+  username: ""
+  password: ""
+
+# -- Extra environment variables
+extraEnvVars: []
+  # - name: SOME_VAR
+  #   value: "some-value"
+
